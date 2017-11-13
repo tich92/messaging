@@ -1,8 +1,10 @@
 ﻿using System;
+using System.Data.SqlClient;
 using System.Threading.Tasks;
 using NServiceBus;
 using NServiceBus.Transport.Kafka;
 using MultiPull.Contracts.Commands;
+using MultiPull.Contracts.Events;
 
 namespace MultiPull.MessageBusWithKafka
 {
@@ -19,9 +21,18 @@ namespace MultiPull.MessageBusWithKafka
 
             var transport = endpointConfiguration.UseTransport<KafkaTransport>();
             transport.ConnectionString("172.29.10.25:9092");
-            
+
+
+            var routing = transport.Routing();
+
+            RegisterPublishers(routing);
+
             var persistance = endpointConfiguration.UsePersistence<InMemoryPersistence>();
-            
+            //var connection = @"Data Source=.\;Initial Catalog=NSBPersistence;Integrated Security=True";
+
+            //persistance.SqlVariant(SqlVariant.MsSqlServer);
+            //persistance.ConnectionBuilder(() => new SqlConnection(connection));
+
             endpointConfiguration.EnableInstallers();
             endpointConfiguration.SendFailedMessagesTo("error");
 
@@ -29,7 +40,7 @@ namespace MultiPull.MessageBusWithKafka
 
             var order = CreateOrder();
 
-            await endpointInstance.Send("MultiPull.Clients.StoreProccessor", order);
+            //await endpointInstance.Send("MultiPull.Clients.StoreProccessor", order);
             
             while (true)
             {
@@ -43,10 +54,21 @@ namespace MultiPull.MessageBusWithKafka
                 }
 
                 if (input != null && input.ToLower().Equals("new"))
-                    await endpointInstance.Send("MultiPull.Clients.StoreProccessor", order);
+                {
+                    await endpointInstance.Send(order);
+                    //await endpointInstance.Send("MultiPull.MessageBusWithKafka", order);
+                }
             }
 
             Console.ReadKey();
+        }
+
+        private static void RegisterPublishers(RoutingSettings<KafkaTransport> routing)
+        {
+            var assembly = typeof(ICreateOrderEvent).Assembly;
+
+            routing.RouteToEndpoint(assembly: assembly, destination: "MultiPull.Clients.StoreProcessor");
+            routing.RouteToEndpoint(typeof(CreateOrderCommand).Assembly, "MultiPull.MessageBusWithKafka");
         }
 
         private static CreateOrderCommand CreateOrder()

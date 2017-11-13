@@ -27,7 +27,9 @@ namespace MultiPull.Clients.StoreProccessor
             transport.ConnectionString("172.29.10.25:9092");
             
             endpointConfig.SendFailedMessagesTo("error");
-            endpointConfig.UsePersistence<InMemoryPersistence>();
+
+            var persistance = endpointConfig.UsePersistence<InMemoryPersistence>();
+            
             endpointConfig.EnableInstallers();
 
             endpointConfig.UseSerialization<JsonSerializer>();

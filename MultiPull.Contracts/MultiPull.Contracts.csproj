@@ -50,6 +50,7 @@
   <ItemGroup>
     <Compile Include="Commands\CreateCustomerOrderCommand.cs" />
     <Compile Include="Commands\CreateOrderCommand.cs" />
+    <Compile Include="Events\IPurchaseOrderEvent.cs" />
     <Compile Include="Events\ICreateOrderEvent.cs" />
     <Compile Include="Models\Order.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
